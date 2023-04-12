@@ -1,22 +1,32 @@
 import sys
-import logging
+# import logging
+import loguru
+import multiprocessing
+from multiprocessing import Manager
+# from queue import Queue
+import os
 import yaml
 import pathlib
 import argparse
 import re
-from typing import Generator, Iterable
+from typing import Generator, Iterable, Any
 from tqdm import tqdm
+from dotenv import load_dotenv
 
+load_dotenv()
 # This is default because im the best and everyone uses F drive surely
-EVOTING_PATH: pathlib.Path = pathlib.Path("F:\\projects\\investigating-errors-project\\e-voting")
+EVOTING_PATH: pathlib.Path = pathlib.Path(os.environ["EVOTING_PATH"])
+TARGET_SOURCE_EXTENSION: str = ".java" if "TARGET_SOURCE_EXTENSION" not in os.environ.keys() \
+    else os.environ["TARGET_SOURCE_EXTENSION"]
 
 parser = argparse.ArgumentParser(
-                    prog='QRParse.py',
-                    description='A Quick Rough Parse(r) for java files (or any source file really...) '
-                                'looking for specified regexes and patterns',
-                    epilog='ALPHA version 0.1.0a')
+    prog='QRParse.py',
+    description='A Quick Rough Parse(r) for java files (or any source file really...) '
+                'looking for specified regexes and patterns',
+    epilog='ALPHA version 0.1.0a')
 
-parser.add_argument('-p', '--path', type=str)           # positional argument
+parser.add_argument('-p', '--path', type=str)
+parser.add_argument('-t', '--type', type=str)
 parser.add_argument('-v', '--verbose',
                     action='store_true')  # on/off flag
 parser.add_argument('-l', '--list',
@@ -60,13 +70,15 @@ class JavaFile:
 
 class JavaFileLoader:
     """
-    An iterable object of Java files globbed from the given directory and all subdirectories
+    An iterable object of Java files globbed from the given directory and all subdirectories based on file extension.
+    By default, we look for '.java' file extensions, but this can be overriden with the `--type` command-line argument,
+    or with the TARGET_SOURCE_EXTENSION environment variable (use a .env file)
     """
 
     def __init__(self, project_path: str) -> None:
         self.path = pathlib.Path(project_path)
         self.depleted: bool = False
-        self.files: Generator = self.path.glob("**/*.java")
+        self.files: Generator = self.path.glob(f"**/*{TARGET_SOURCE_EXTENSION}")
         self.current_idx: int = 0
 
     def __iter__(self):
@@ -83,22 +95,55 @@ class RelevantFiles:
     MATCHES: dict[str, list[JavaFile]] = None
 
     def __init__(self, jf_iterable: Iterable[JavaFile]) -> None:
+        """
+        We multiprocess the file globbing and parsing as complex regex's can be inefficient to compute, especially over
+        large numbers of files (such as the e-voting source dir)
+        """
+        self.POOL = multiprocessing.Pool(processes=8)
         self.MATCHES = {}
+
+        manager = Manager()
+        result_queue = manager.Queue()
         for pat_ in DEFAULT_PATTERNS.keys():
             self.MATCHES[pat_] = []
 
         print("Spinning up globbing engine...")
         for jf in tqdm(jf_iterable, ncols=60, colour='blue', desc='Globbing and Matching...'):
-            for p_key in DEFAULT_PATTERNS.keys():
-                pattern = DEFAULT_PATTERNS[p_key]
-                _test = re.search(pattern, jf.contents)
-                if not _test:
-                    continue
+            self.POOL.apply_async(func=mp_parse_file, args=(jf, result_queue,))
 
-                self.MATCHES[p_key].append(jf)
+        # Pull from the multiprocessing result queue to extract the computed dicts of each process invocation,
+        # merge dict lists into main matches dict.
+        while not result_queue.empty():
+            _res: dict[str, list[JavaFile]] = result_queue.get()
+            for rkey in _res.keys():
+                self.MATCHES[rkey].extend(_res[rkey])
+
+
+def mp_parse_file(jf: JavaFile, _rq: Any) -> None:
+    """
+    This is the multiprocessing target that the multiprocessing pool points the workers at,
+    _rq is a result queue (from Manager().Queue()) that the output is stored in upon completion
+    """
+    _matches = {}
+    for p_key in DEFAULT_PATTERNS.keys():
+        pattern = DEFAULT_PATTERNS[p_key]
+        _test = re.search(pattern, jf.contents)
+        if not _test:
+            continue
+
+        if p_key not in _matches.keys():
+            _matches[p_key] = []
+
+        _matches[p_key].append(jf)
+    _rq.put(_matches)
 
 
 class RelevantValuesCallExtractor:
+    """
+    Uses the regexes specified in SUB_PATTERNS to extract the relevant important values from the given JavaFile
+    object based on the computed relevance_type of that file from the RelevantFiles output dict
+    """
+
     def __init__(self, jf: JavaFile, relevance_type: str) -> None:
         self.file = jf
         self.relevance_type = relevance_type
@@ -108,9 +153,9 @@ class RelevantValuesCallExtractor:
             _result = re.findall(reg, self.file.contents)
             if _result:
                 for res in _result:
-                    self.extracted.append(str(res).strip().replace("\\n", "").replace("\\t", ""))
-        print(f"{self.file.name}: {self.relevance_type}")
-        print(self.extracted)
+                    self.extracted.append(str(res).strip().replace("\n", "").replace("\t", ""))
+        # print(f"{self.file.name}: {self.relevance_type}")
+        # print(self.extracted)
 
 
 class ClassInstanceFieldsExtractor:
@@ -170,27 +215,64 @@ class ClassInstanceFieldsExtractor:
             print(e)
 
 
+class HashGeneratorCheckInstanceFieldUsage:
+    USED: list[str] = None
+    UNUSED: list[str] = None
+
+    def __init__(self,
+                 cife: ClassInstanceFieldsExtractor,
+                 rvce: RelevantValuesCallExtractor,
+                 ) -> None:
+        self.USED = []
+        self.UNUSED = []
+
+        for _cif in cife.values:
+
+            _name = _cif[0 if len(_cif[0]) > len(_cif[1]) else 1].replace("final", "").strip()
+            _name = _name.split()[-1]
+            if _name == "signature":
+                continue
+            if any([_name in x for x in rvce.extracted]):
+                self.USED.append(_name)
+            else:
+                self.UNUSED.append(_name)
+        loguru.logger.success(f"REPORT: {cife.file.name} results")
+        if self.UNUSED:
+            loguru.logger.warning(f"The following class instance fields were found to not be used in the Hash Generator:")
+            for _un in self.UNUSED:
+                loguru.logger.warning(f" - {_un}")
+        else:
+            loguru.logger.info(f"All class instance fields were found in the Hash Generator declaration.")
+
+
 args = parser.parse_args()
 
 if args.list:
     print(yaml.safe_dump(DEFAULT_PATTERNS))
     sys.exit(0)
 
-
 if args.path is None:
-    print(f"No path provided with --path < path >, using default path to evoting (hard coded in script!)")
-
+    print(f"<< No path provided with --path < path >, defaulting to EVOTING_PATH environment variable. >>")
 
 if args.patterns:
+    print(f"<< Additional anonymous patterns provided with --patterns, temp inserting into defaults... >>")
     for idx, pat in enumerate(args.patterns):
         DEFAULT_PATTERNS[f"ANONYMOUS_{idx}"] = pat
 
+if args.type:
+    TARGET_SOURCE_EXTENSION = args.type
+    print(f"<< Target source type extension provided with --type, overriding TARGET_SOURCE_EXTENSION >>")
+
+if not TARGET_SOURCE_EXTENSION.startswith("."):
+    print("!! Target source type override is likely not a file extension (doesn't start with \".\") !!")
+    print("!! This may result in unusual and unexpected globbing behaviour, proceed with caution.   !!")
 
 if __name__ == "__main__":
     _path = EVOTING_PATH if args.path is None else args.path
     _relevant = RelevantFiles(JavaFileLoader(_path))
     for hash_gen in _relevant.MATCHES["Hash Generators"]:
         # print(hash_gen.name)
-        ClassInstanceFieldsExtractor(hash_gen)
-        RelevantValuesCallExtractor(hash_gen, "Hash Generators")
+        _cife = ClassInstanceFieldsExtractor(hash_gen)
+        _rvce = RelevantValuesCallExtractor(hash_gen, "Hash Generators")
+        HashGeneratorCheckInstanceFieldUsage(_cife, _rvce)
     # print(_relevant.MATCHES)
