@@ -162,12 +162,22 @@ class ClassInstanceFieldsExtractor:
     def __init__(self, jf: JavaFile) -> None:
         self.file = jf
         self.is_record = False
+        self.is_final = False
+        self.is_abstract = False
         self.has_static_builder = False
         self.implements: None | str = None
-        self.values: None | list[tuple] = None
+        self.extends: None | str = None
+        self.values: list[tuple] = []
         try:
             if "public class" in self.file.contents:
                 _search_str = "public class"
+                _class_def_start: int = self.file.contents.index(_search_str)
+            elif "public final class" in self.file.contents:
+                _search_str = "public final class"
+                _class_def_start: int = self.file.contents.index(_search_str)
+            elif "public abstract class" in self.file.contents:
+                self.is_abstract = True
+                _search_str = "public abstract class"
                 _class_def_start: int = self.file.contents.index(_search_str)
             elif "public record" in self.file.contents:
                 self.is_record = True
@@ -183,12 +193,18 @@ class ClassInstanceFieldsExtractor:
             if "implements" in self.file.contents:
                 self.implements = self.file.contents.split("implements ")[1].split("{")[0].strip()
 
+            if "extends" in self.file.contents:
+                self.extends = self.file.contents.split("extends ")[1].strip().split()[0]
+
             if "public static class Builder" in self.file.contents:
                 self.has_static_builder = True
 
             if self.is_record:
                 _class_def_name = _class_def_name.split("(")[0]
                 _class_def_end = self.file.contents.index(f"public {_class_def_name} {{")
+            elif self.is_abstract:
+                _class_def_name = _class_def_name.split()[0]
+                _class_def_end = self.file.contents.index(f"public abstract")
             else:
                 _class_def_name = _class_def_name.split()[0]
                 if self.has_static_builder:
@@ -225,6 +241,7 @@ class HashGeneratorCheckInstanceFieldUsage:
                  ) -> None:
         self.USED = []
         self.UNUSED = []
+        self._cife = cife
 
         for _cif in cife.values:
 
@@ -236,7 +253,9 @@ class HashGeneratorCheckInstanceFieldUsage:
                 self.USED.append(_name)
             else:
                 self.UNUSED.append(_name)
-        loguru.logger.success(f"REPORT: {cife.file.name} results")
+
+    def log(self) -> None:
+        loguru.logger.success(f"REPORT: {self._cife.file.name} results")
         if self.UNUSED:
             loguru.logger.warning(f"The following class instance fields were found to not be used in the Hash Generator:")
             for _un in self.UNUSED:
@@ -245,29 +264,50 @@ class HashGeneratorCheckInstanceFieldUsage:
             loguru.logger.info(f"All class instance fields were found in the Hash Generator declaration.")
 
 
+class ClassInstanceFieldUsageReport:
+
+    REPORT: dict[JavaFile, dict]
+
+    def __init__(self) -> None:
+        self.REPORT = {}
+
+    def report(self, jf: JavaFile, relevance_type: str) -> None:
+        if jf in self.REPORT.keys():
+            if relevance_type in self.REPORT[jf].keys():
+                return
+
+        _fields = ClassInstanceFieldsExtractor(jf)
+        _matches = RelevantValuesCallExtractor(jf, relevance_type)
+        _usages = HashGeneratorCheckInstanceFieldUsage(_fields, _matches)
+
+        self.REPORT[jf][relevance_type] = {
+            "used": _usages.USED,
+            "unused": _usages.UNUSED
+        }
+
 args = parser.parse_args()
 
-if args.list:
-    print(yaml.safe_dump(DEFAULT_PATTERNS))
-    sys.exit(0)
-
-if args.path is None:
-    print(f"<< No path provided with --path < path >, defaulting to EVOTING_PATH environment variable. >>")
-
-if args.patterns:
-    print(f"<< Additional anonymous patterns provided with --patterns, temp inserting into defaults... >>")
-    for idx, pat in enumerate(args.patterns):
-        DEFAULT_PATTERNS[f"ANONYMOUS_{idx}"] = pat
-
-if args.type:
-    TARGET_SOURCE_EXTENSION = args.type
-    print(f"<< Target source type extension provided with --type, overriding TARGET_SOURCE_EXTENSION >>")
-
-if not TARGET_SOURCE_EXTENSION.startswith("."):
-    print("!! Target source type override is likely not a file extension (doesn't start with \".\") !!")
-    print("!! This may result in unusual and unexpected globbing behaviour, proceed with caution.   !!")
-
 if __name__ == "__main__":
+    if args.list:
+        print(yaml.safe_dump(DEFAULT_PATTERNS))
+        sys.exit(0)
+
+    if args.path is None:
+        print(f"<< No path provided with --path < path >, defaulting to EVOTING_PATH environment variable. >>")
+
+    if args.patterns:
+        print(f"<< Additional anonymous patterns provided with --patterns, temp inserting into defaults... >>")
+        for idx, pat in enumerate(args.patterns):
+            DEFAULT_PATTERNS[f"ANONYMOUS_{idx}"] = pat
+
+    if args.type:
+        TARGET_SOURCE_EXTENSION = args.type
+        print(f"<< Target source type extension provided with --type, overriding TARGET_SOURCE_EXTENSION >>")
+
+    if not TARGET_SOURCE_EXTENSION.startswith("."):
+        print("!! Target source type override is likely not a file extension (doesn't start with \".\") !!")
+        print("!! This may result in unusual and unexpected globbing behaviour, proceed with caution.   !!")
+
     _path = EVOTING_PATH if args.path is None else args.path
     _relevant = RelevantFiles(JavaFileLoader(_path))
     for hash_gen in _relevant.MATCHES["Hash Generators"]:
@@ -275,4 +315,9 @@ if __name__ == "__main__":
         _cife = ClassInstanceFieldsExtractor(hash_gen)
         _rvce = RelevantValuesCallExtractor(hash_gen, "Hash Generators")
         HashGeneratorCheckInstanceFieldUsage(_cife, _rvce)
+    for hash_gen in _relevant.MATCHES["Hashcode Generators"]:
+        # print(hash_gen.name)
+        _cife = ClassInstanceFieldsExtractor(hash_gen)
+        _rvce = RelevantValuesCallExtractor(hash_gen, "Hashcode Generators")
+        HashGeneratorCheckInstanceFieldUsage(_cife, _rvce).log()
     # print(_relevant.MATCHES)
