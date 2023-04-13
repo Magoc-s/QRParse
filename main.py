@@ -27,6 +27,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('-p', '--path', type=str)
 parser.add_argument('-t', '--type', type=str)
+parser.add_argument('-o', '--out', type=str)
 parser.add_argument('-v', '--verbose',
                     action='store_true')  # on/off flag
 parser.add_argument('-l', '--list',
@@ -53,7 +54,7 @@ SUB_PATTERNS: dict = {
 }
 
 INSTANCE_FIELD_MATCH = r"private(final | )? ([^;]+);"
-RECORD_CONS_FIELD_MATCH = r"([\S]+ [a-zA-Z_]+)(,|$)"
+RECORD_CONS_FIELD_MATCH = r"([\S]+ [a-zA-Z_]+)(,|$|\))"
 
 
 class JavaFile:
@@ -149,13 +150,15 @@ class RelevantValuesCallExtractor:
         self.relevance_type = relevance_type
         self.extractor_regexes: list[str] = SUB_PATTERNS[self.relevance_type]
         self.extracted: list[str] = []
+        self.full_str: str = "!! unable to extract !!"
         for reg in self.extractor_regexes:
             _result = re.findall(reg, self.file.contents)
             if _result:
                 for res in _result:
                     self.extracted.append(str(res).strip().replace("\n", "").replace("\t", ""))
-        # print(f"{self.file.name}: {self.relevance_type}")
-        # print(self.extracted)
+
+                _full_str_match = re.search(reg, self.file.contents)
+                self.full_str = _full_str_match.group().replace("\n", "").replace("\t", "").strip()
 
 
 class ClassInstanceFieldsExtractor:
@@ -214,7 +217,9 @@ class ClassInstanceFieldsExtractor:
 
             # print(f"Class def starts at {_class_def_start}, ends at {_class_def_end} and has name {_class_def_name} ")
             if self.is_record:
-                _sub_contents: str = self.file.contents[_class_def_start:_class_def_end].split("(")[1].split(")")[0]
+                _sub_contents: str = self.file.contents[_class_def_start:_class_def_end].split(f"{_class_def_name}(")[1].split("{")[0]
+                if self.implements:
+                    _sub_contents = _sub_contents.split("implements")[0]
                 matches = re.findall(RECORD_CONS_FIELD_MATCH, _sub_contents)
                 if matches:
                     self.values = matches
@@ -242,17 +247,22 @@ class HashGeneratorCheckInstanceFieldUsage:
         self.USED = []
         self.UNUSED = []
         self._cife = cife
+        self.parsed_values = []
 
         for _cif in cife.values:
 
-            _name = _cif[0 if len(_cif[0]) > len(_cif[1]) else 1].replace("final", "").strip()
-            _name = _name.split()[-1]
+            _name: str = _cif[0 if len(_cif[0]) > len(_cif[1]) else 1].replace("final", "").strip()
+            _name: str = _name.split()[-1]
+            self.parsed_values.append(_name)
             if _name == "signature":
                 continue
             if any([_name in x for x in rvce.extracted]):
                 self.USED.append(_name)
             else:
-                self.UNUSED.append(_name)
+                if any([_name.capitalize() in x for x in rvce.extracted]):
+                    self.USED.append(_name)
+                else:
+                    self.UNUSED.append(_name)
 
     def log(self) -> None:
         loguru.logger.success(f"REPORT: {self._cife.file.name} results")
@@ -266,24 +276,53 @@ class HashGeneratorCheckInstanceFieldUsage:
 
 class ClassInstanceFieldUsageReport:
 
-    REPORT: dict[JavaFile, dict]
+    REPORT: dict[str, dict]
+    HGCIFU: HashGeneratorCheckInstanceFieldUsage | None
 
     def __init__(self) -> None:
         self.REPORT = {}
+        self.HGCIFU = None
 
     def report(self, jf: JavaFile, relevance_type: str) -> None:
-        if jf in self.REPORT.keys():
-            if relevance_type in self.REPORT[jf].keys():
+        if jf.name in self.REPORT.keys():
+            if relevance_type in self.REPORT[jf.name].keys():
                 return
+        else:
+            self.REPORT[jf.name] = {}
 
         _fields = ClassInstanceFieldsExtractor(jf)
         _matches = RelevantValuesCallExtractor(jf, relevance_type)
-        _usages = HashGeneratorCheckInstanceFieldUsage(_fields, _matches)
+        self.HGCIFU = HashGeneratorCheckInstanceFieldUsage(_fields, _matches)
 
-        self.REPORT[jf][relevance_type] = {
-            "used": _usages.USED,
-            "unused": _usages.UNUSED
+        self.REPORT[jf.name][relevance_type] = {
+            "matched string": _matches.full_str,
+            "instance fields": self.HGCIFU.parsed_values,
+            "used": self.HGCIFU.USED,
+            "unused": self.HGCIFU.UNUSED
         }
+
+    def send_out(self, fp: str) -> None:
+        _sout = sys.stdout
+        _serr = sys.stderr
+
+        _out = {
+            "stdout": _sout,
+            "serr": _serr
+        }
+
+        try:
+            _output = _out[fp]
+        except KeyError:
+            _output = fp
+
+        handle = open(_output, 'w') if _output == fp else _output
+        yaml.safe_dump(self.REPORT, handle)
+        if handle is not (sys.stdout or sys.stderr):
+            handle.close()
+
+        # print(_matches.extracted)
+        # print(self.REPORT)
+
 
 args = parser.parse_args()
 
@@ -310,14 +349,21 @@ if __name__ == "__main__":
 
     _path = EVOTING_PATH if args.path is None else args.path
     _relevant = RelevantFiles(JavaFileLoader(_path))
+    _CIFUR = ClassInstanceFieldUsageReport()
+
     for hash_gen in _relevant.MATCHES["Hash Generators"]:
+        _CIFUR.report(hash_gen, "Hash Generators")
+
+        if args.verbose and _CIFUR.HGCIFU:
+            _CIFUR.HGCIFU.log()
+
+    if args.out:
+        _CIFUR.send_out(args.out)
+
+
         # print(hash_gen.name)
-        _cife = ClassInstanceFieldsExtractor(hash_gen)
-        _rvce = RelevantValuesCallExtractor(hash_gen, "Hash Generators")
-        HashGeneratorCheckInstanceFieldUsage(_cife, _rvce)
-    for hash_gen in _relevant.MATCHES["Hashcode Generators"]:
-        # print(hash_gen.name)
-        _cife = ClassInstanceFieldsExtractor(hash_gen)
-        _rvce = RelevantValuesCallExtractor(hash_gen, "Hashcode Generators")
-        HashGeneratorCheckInstanceFieldUsage(_cife, _rvce).log()
-    # print(_relevant.MATCHES)
+        # _cife = ClassInstanceFieldsExtractor(hash_gen)
+        # _rvce = RelevantValuesCallExtractor(hash_gen, "Hash Generators")
+        # HashGeneratorCheckInstanceFieldUsage(_cife, _rvce)
+        # ClassInstanceFieldUsageReport().report(hash_gen, "Hash Generators")
+
