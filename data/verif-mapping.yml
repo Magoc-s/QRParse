@@ -1,0 +1,96 @@
+crypto-primitives:
+    ch.post.it.evoting.cryptoprimitives.elgamal:
+        - ElGamalMultiRecipientCiphertext
+        - ElGamalMultiRecipientKeyPair
+        - ElGamalMultiRecipientMessage
+        - ElGamalMultiRecipientPrivateKey
+        - ElGamalMultiRecipientPublicKey
+    ch.post.it.evoting.cryptoprimitives.hashing:
+        - HashableBigInteger
+        - HashableByteArray
+        - HashableList
+        - HashableString
+    ch.post.it.evoting.cryptoprimitives.internal.mixnet:
+        - CommitmentKey
+    ch.post.it.evoting.cryptoprimitives.math:
+        - GqGroup
+        - GroupElement
+        - GroupMatrix
+        - GroupVector
+    ch.post.it.evoting.cryptoprimitives.mixnet:
+        - HadamardArgument
+        - MultiExponentiationArgument
+        - ProductArgument
+        - ShuffleArgument
+        - SingleValueProductArgument
+        - VerifiableShuffle
+        - ZeroArgument
+    ch.post.it.evoting.cryptoprimitives.test.tools:
+        - TestGroupElement
+        - TestSizedElement
+    ch.post.it.evoting.cryptoprimitives.zeroknowledgeproofs:
+        - DecryptionProof
+        - ExponentiationProof
+        - PlaintextEqualityProof
+        - SchnorrProof
+        - VerifiableDecryptions
+crypto-primitives-domain:
+    ch.post.it.evoting.cryptoprimitives.domain.election:
+        - CombinedCorrectnessInformation
+        - ControlComponentPublicKeys
+        - CorrectnessInformation
+        - ElectionEventContext
+        - PrimesMappingTable
+        - PrimesMappingTableEntry
+        - SetupComponentPublicKeys
+        - VerificationCardSetContext
+    ch.post.it.evoting.cryptoprimitives.domain.mixnet:
+        - ControlComponentShufflePayload
+        - ElectionEventContextPayload
+        - EncryptionParametersPayload
+        - SetupComponentPublicKeysPayload
+        - TallyComponentShufflePayload
+    ch.post.it.evoting.cryptoprimitives.domain.returncodes:
+        - ControlComponentCodeShare
+        - ControlComponentCodeSharesPayload
+        - SetupComponentVerificationData
+        - SetupComponentVerificationDataPayload
+domain:
+    ch.post.it.evoting.domain:
+        - ContextIds
+        - EncryptedVerifiableVote
+    ch.post.it.evoting.domain.configuration:
+        - ChoiceReturnCodeToEncodedVotingOptionEntry
+        - ControlComponentPublicKeysPayload
+        - ElectoralBoardHashesPayload
+        - SetupComponentCMTablePayload
+        - SetupComponentTallyDataPayload
+        - SetupComponentVerificationCardKeystoresPayload
+        - VerificationCardKeystore
+    ch.post.it.evoting.domain.configuration.setupvoting:
+        - SetupComponentLVCCAllowListPayload
+    ch.post.it.evoting.domain.tally:
+        - ControlComponentBallotBoxPayload
+        - TallyComponentVotesPayload
+    ch.post.it.evoting.domain.voting.confirmvote:
+        - ConfirmationKey
+        - ControlComponenthlVCCPayload
+        - ControlComponentlVCCSharePayload
+        - LongVoteCastReturnCodesShare
+        - VotingServerConfirmPayload
+    ch.post.it.evoting.domain.voting.sendvote:
+        - ControlComponentLCCSharePayload
+        - ControlComponentPartialDecryptPayload
+        - LongChoiceReturnCodesShare
+        - PartiallyDecryptedEncryptedPCC
+        - VotingServerEncryptedVotePayload
+verifier-protocol:
+    ch.post.it.evoting.verifier.protocol.domain:
+        - ContextIds
+        - EncryptedVerifiableVote
+    ch.post.it.evoting.verifier.protocol.domain.configuration:
+        - ControlComponentPublicKeysPayload
+        - SetupComponentTallyDataPayload
+    ch.post.it.evoting.verifier.protocol.domain.tally:
+        - ControlComponentBallotBoxPayload
+        - TallyComponentVotesPayload

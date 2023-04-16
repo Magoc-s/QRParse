@@ -36,11 +36,12 @@ parser.add_argument('--patterns', metavar='R', type=str, nargs='+',
                     help='The regex patterns to look for, appended to default')
 
 DEFAULT_PATTERNS: dict = {
-    "Hash Generators": r"List<Hashable> toHashableForm\(\)",
+    "Hash Generators": r"toHashableForm\(\)",  # r"public List<(.*)> toHashableForm\(\)",
     "Hash Usages": r"([a-zA-Z]+[a-zA-Z0-9]*).toHashableForm\(\)",
-    "Hashable Type Usages": r"Hashable([A-Za-z]+).from\(([a-zA-Z]+[a-zA-Z0-9\.\_\(\)]*)\)",
-    "Hashcode Generators": r"public int hashCode\(\)"
 }
+
+# "Hashable Type Usages": r"Hashable([A-Za-z]+).from\(([a-zA-Z]+[a-zA-Z0-9\.\_\(\)]*)\)"
+# "Hashcode Generators": r"public int hashCode\(\)"
 
 SUB_PATTERNS: dict = {
     "Hashcode Generators": [
@@ -48,7 +49,7 @@ SUB_PATTERNS: dict = {
         # matches the Objects.hash func call, and groups the meth. params
     ],
     "Hash Generators": [
-        r"List.of\([\s]*([a-zA-Z]+[a-zA-Z0-9\.,\_\(\)\s]*)\)"
+        r"List.of\([\s]*([a-zA-Z]+[a-zA-Z0-9\.,\_\(\)\s:(->)]*)\)"
         # matches the List.of func call, and groups the params included in that call
     ]
 }
@@ -102,6 +103,7 @@ class RelevantFiles:
         """
         self.POOL = multiprocessing.Pool(processes=8)
         self.MATCHES = {}
+        self.num_matches: int = 0
 
         manager = Manager()
         result_queue = manager.Queue()
@@ -118,6 +120,9 @@ class RelevantFiles:
             _res: dict[str, list[JavaFile]] = result_queue.get()
             for rkey in _res.keys():
                 self.MATCHES[rkey].extend(_res[rkey])
+
+        for _tk in self.MATCHES.keys():
+            self.num_matches += len(self.MATCHES[_tk])
 
 
 def mp_parse_file(jf: JavaFile, _rq: Any) -> None:
@@ -151,9 +156,12 @@ class RelevantValuesCallExtractor:
         self.extractor_regexes: list[str] = SUB_PATTERNS[self.relevance_type]
         self.extracted: list[str] = []
         self.full_str: str = "!! unable to extract !!"
+        self.multiple_matches: bool = False
         for reg in self.extractor_regexes:
             _result = re.findall(reg, self.file.contents)
             if _result:
+                if len(_result) > 1:
+                    self.multiple_matches = True
                 for res in _result:
                     self.extracted.append(str(res).strip().replace("\n", "").replace("\t", ""))
 
@@ -301,6 +309,12 @@ class ClassInstanceFieldUsageReport:
             "unused": self.HGCIFU.UNUSED
         }
 
+        if _matches.multiple_matches:
+            self.REPORT[jf.name][relevance_type]["special notes"] = [
+                f"multiple matches for pattern regex found in file, check specifics of definition manually. "
+                f"(file://{_matches.file.path})"
+            ]
+
     def send_out(self, fp: str) -> None:
         _sout = sys.stdout
         _serr = sys.stderr
@@ -322,6 +336,47 @@ class ClassInstanceFieldUsageReport:
 
         # print(_matches.extracted)
         # print(self.REPORT)
+
+
+class EffectivityVerifier:
+    def __init__(self):
+        try:
+            with open('data/verif-mapping.yml', 'r') as h:
+                self.mapping: dict = yaml.safe_load(h)
+        except OSError:
+            print("could not open data/verif-mapping.yml, there will be no verification")
+            self.mapping = None
+
+
+class QRParseWrapper:
+    def __init__(self, args_) -> None:
+        self.args = args_
+        self.paths = []
+
+    def get_paths_from_env(self) -> None:
+        try:
+            self.paths.append(os.environ["VERIFIER_PATH"])
+            self.paths.append(os.environ["EVOTING_PATH"])
+            self.paths.append(os.environ["CPD_PATH"])
+            self.paths.append(os.environ["CP_PATH"])
+        except KeyError as e:
+            print("Environment variable for path to dir is missing.")
+            raise e
+
+    def exec(self):
+        for path in self.paths:
+            _relevant = RelevantFiles(JavaFileLoader(path))
+            print(f"Hey! Found {_relevant.num_matches} matches.")
+            _CIFUR = ClassInstanceFieldUsageReport()
+
+            for hash_gen in _relevant.MATCHES["Hash Generators"]:
+                _CIFUR.report(hash_gen, "Hash Generators")
+
+                if self.args.verbose and _CIFUR.HGCIFU:
+                    _CIFUR.HGCIFU.log()
+
+            # if self.args.out:
+                # _CIFUR.send_out(args.out)
 
 
 args = parser.parse_args()
@@ -347,23 +402,7 @@ if __name__ == "__main__":
         print("!! Target source type override is likely not a file extension (doesn't start with \".\") !!")
         print("!! This may result in unusual and unexpected globbing behaviour, proceed with caution.   !!")
 
-    _path = EVOTING_PATH if args.path is None else args.path
-    _relevant = RelevantFiles(JavaFileLoader(_path))
-    _CIFUR = ClassInstanceFieldUsageReport()
-
-    for hash_gen in _relevant.MATCHES["Hash Generators"]:
-        _CIFUR.report(hash_gen, "Hash Generators")
-
-        if args.verbose and _CIFUR.HGCIFU:
-            _CIFUR.HGCIFU.log()
-
-    if args.out:
-        _CIFUR.send_out(args.out)
-
-
-        # print(hash_gen.name)
-        # _cife = ClassInstanceFieldsExtractor(hash_gen)
-        # _rvce = RelevantValuesCallExtractor(hash_gen, "Hash Generators")
-        # HashGeneratorCheckInstanceFieldUsage(_cife, _rvce)
-        # ClassInstanceFieldUsageReport().report(hash_gen, "Hash Generators")
+    wrapper = QRParseWrapper(args)
+    wrapper.get_paths_from_env()
+    wrapper.exec()
 
