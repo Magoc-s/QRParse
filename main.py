@@ -275,11 +275,11 @@ class HashGeneratorCheckInstanceFieldUsage:
     def log(self) -> None:
         loguru.logger.success(f"REPORT: {self._cife.file.name} results")
         if self.UNUSED:
-            loguru.logger.warning(f"The following class instance fields were found to not be used in the Hash Generator:")
+            loguru.logger.error(f"The following class instance fields were found to not be used in the Hash Generator:")
             for _un in self.UNUSED:
                 loguru.logger.warning(f" - {_un}")
         else:
-            loguru.logger.info(f"All class instance fields were found in the Hash Generator declaration.")
+            loguru.logger.success(f"All class instance fields were found in the Hash Generator declaration.")
 
 
 class ClassInstanceFieldUsageReport:
