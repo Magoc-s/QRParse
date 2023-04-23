@@ -1,19 +1,3 @@
-parser = argparse.ArgumentParser(
-    prog='QRParse.py',
-    description='A Quick Rough Parse(r) for java files (or any source file really...) '
-                'looking for specified regexes and patterns',
-    epilog='ALPHA version 0.1.0a')
-
-parser.add_argument('-p', '--path', type=str)
-parser.add_argument('-t', '--type', type=str)
-parser.add_argument('-o', '--out', type=str)
-parser.add_argument('-v', '--verbose',
-                    action='store_true')  # on/off flag
-parser.add_argument('-l', '--list',
-                    action='store_true')
-parser.add_argument('--patterns', metavar='R', type=str, nargs='+',
-                    help='The regex patterns to look for, appended to default')
-
 # QRParse
 
 QRParse is a python scripted designed to peform a **Q**uick **R**ough **Parse** on series of Java project directories,
