@@ -1,3 +1,4 @@
+import datetime
 import sys
 import time
 
@@ -25,10 +26,11 @@ parser = argparse.ArgumentParser(
     prog='QRParse.py',
     description='A Quick Rough Parse(r) for java files (or any source file really...) '
                 'looking for specified regexes and patterns',
-    epilog='ALPHA version 0.1.0a')
+    epilog='ALPHA version 1.0.0rc1')
 
 parser.add_argument('-p', '--path', type=str)
 parser.add_argument('-t', '--type', type=str)
+parser.add_argument('-n', '--number-threads', type=int, default=8)
 parser.add_argument('-o', '--out', type=str)
 parser.add_argument('-v', '--verbose',
                     action='store_true')  # on/off flag
@@ -57,6 +59,7 @@ SUB_PATTERNS: dict = {
 
 INSTANCE_FIELD_MATCH = r"private(final | )? ([^;]+);"
 RECORD_CONS_FIELD_MATCH = r"([\S]+ [a-zA-Z_]+)(,|$|\))"
+TEMP_LOCAL_MODIFICATION_MATCH = r"final ([\S]+)(<[^=]+>) ([\S]+) = ([\S]+)\.([^;]+);"
 
 
 class JavaFile:
@@ -102,7 +105,7 @@ class RelevantFiles:
         We multiprocess the file globbing and parsing as complex regex's can be inefficient to compute, especially over
         large numbers of files (such as the e-voting source dir)
         """
-        self.POOL = multiprocessing.Pool(processes=8)
+        self.POOL = multiprocessing.Pool(processes=args.number_threads)
         self.MATCHES = {}
         self.num_matches: int = 0
 
@@ -268,10 +271,10 @@ class HashGeneratorCheckInstanceFieldUsage:
             self.parsed_values.append(_name)
             if _name == "signature":
                 continue
-            if any([_name in x for x in rvce.extracted]):
+            if any([_name.lower() in x.lower() for x in rvce.extracted]):
                 self.USED.append(_name)
             else:
-                if any([_name.capitalize() in x for x in rvce.extracted]):
+                if any([_name.lower() in x.lower() for x in rvce.extracted]):
                     self.USED.append(_name)
                 else:
                     self.UNUSED.append(_name)
@@ -306,6 +309,22 @@ class ClassInstanceFieldUsageReport:
         _matches = RelevantValuesCallExtractor(jf, relevance_type)
         self.HGCIFU = HashGeneratorCheckInstanceFieldUsage(_fields, _matches)
 
+        if self.HGCIFU.UNUSED:
+            to_remove = None
+            full_str = _fields.file.contents.split("toHashableForm()")[1].split("}")[0]
+            _match = re.search(TEMP_LOCAL_MODIFICATION_MATCH, full_str)
+            if _match:
+                _g = _match.group()
+                for possible_unused in self.HGCIFU.UNUSED:
+                    if possible_unused in _g:
+                        loguru.logger.info(f"Found instance field alias: {possible_unused} becomes "
+                                           f"{_g.split('=')[0].strip().split()[-1]} in {_fields.file.name}")
+                        self.HGCIFU.USED.append(possible_unused)
+                        to_remove = possible_unused
+
+                if to_remove is not None:
+                    self.HGCIFU.UNUSED.remove(to_remove)
+
         self.REPORT[jf.name][relevance_type] = {
             "matched string": _matches.full_str,
             "instance fields": self.HGCIFU.parsed_values,
@@ -319,7 +338,7 @@ class ClassInstanceFieldUsageReport:
                 f"(file://{_matches.file.path})"
             ]
 
-    def send_out(self, fp: str) -> None:
+    def send_out(self, fp: str, append_mode: bool = True) -> None:
         _sout = sys.stdout
         _serr = sys.stderr
 
@@ -333,8 +352,10 @@ class ClassInstanceFieldUsageReport:
         except KeyError:
             _output = fp
 
-        handle = open(_output, 'w') if _output == fp else _output
+        handle = open(_output, 'a' if append_mode else 'w') if _output == fp else _output
+        handle.write(f"# ----- BEGIN REPORT ------\n")
         yaml.safe_dump(self.REPORT, handle)
+        handle.write(f"# ----- END REPORT ------\n\n")
         if handle is not (sys.stdout or sys.stderr):
             handle.close()
 
@@ -408,7 +429,14 @@ class QRParseWrapper:
             raise e
 
     def exec(self):
+        if os.path.exists(args.out) and args.out.endswith(".yml"):
+            os.remove(args.out)
+
+        with open(args.out, "w") as h:
+            h.write(f"# ----- BEGIN QRPARSE TEST {datetime.datetime.now()} ------\n")
+
         for path in self.paths:
+
             _verifier = EffectivityVerifier()
             _relevant = RelevantFiles(JavaFileLoader(str(path)))
             # print(f"Hey! Found {_relevant.num_matches} matches.")
@@ -423,8 +451,8 @@ class QRParseWrapper:
             _verifier.verify_relevant_files(path.name, _relevant.MATCHES)
             print(f"Cooling down processing pool...")
             time.sleep(1)
-            # if self.args.out:
-                # _CIFUR.send_out(args.out)
+            if self.args.out:
+                _CIFUR.send_out(args.out)
 
 
 args = parser.parse_args()
