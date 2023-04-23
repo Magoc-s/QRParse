@@ -1,4 +1,6 @@
 import sys
+import time
+
 # import logging
 import loguru
 import multiprocessing
@@ -36,10 +38,9 @@ parser.add_argument('--patterns', metavar='R', type=str, nargs='+',
                     help='The regex patterns to look for, appended to default')
 
 DEFAULT_PATTERNS: dict = {
-    "Hash Generators": r"toHashableForm\(\)",  # r"public List<(.*)> toHashableForm\(\)",
-    "Hash Usages": r"([a-zA-Z]+[a-zA-Z0-9]*).toHashableForm\(\)",
+    "Hash Generators": r" toHashableForm\(\) {",  # r"public List<(.*)> toHashableForm\(\)",
 }
-
+# "Hash Usages": r"([a-zA-Z]+[a-zA-Z0-9]*).toHashableForm\(\)"
 # "Hashable Type Usages": r"Hashable([A-Za-z]+).from\(([a-zA-Z]+[a-zA-Z0-9\.\_\(\)]*)\)"
 # "Hashcode Generators": r"public int hashCode\(\)"
 
@@ -112,7 +113,7 @@ class RelevantFiles:
 
         print("Spinning up globbing engine...")
         for jf in tqdm(jf_iterable, ncols=60, colour='blue', desc='Globbing and Matching...'):
-            self.POOL.apply_async(func=mp_parse_file, args=(jf, result_queue,))
+            self.POOL.apply(func=mp_parse_file, args=(jf, result_queue,))
 
         # Pull from the multiprocessing result queue to extract the computed dicts of each process invocation,
         # merge dict lists into main matches dict.
@@ -130,9 +131,11 @@ def mp_parse_file(jf: JavaFile, _rq: Any) -> None:
     This is the multiprocessing target that the multiprocessing pool points the workers at,
     _rq is a result queue (from Manager().Queue()) that the output is stored in upon completion
     """
+    # time.sleep(0.1)
     _matches = {}
     for p_key in DEFAULT_PATTERNS.keys():
         pattern = DEFAULT_PATTERNS[p_key]
+
         _test = re.search(pattern, jf.contents)
         if not _test:
             continue
@@ -159,6 +162,7 @@ class RelevantValuesCallExtractor:
         self.multiple_matches: bool = False
         for reg in self.extractor_regexes:
             _result = re.findall(reg, self.file.contents)
+
             if _result:
                 if len(_result) > 1:
                     self.multiple_matches = True
@@ -240,7 +244,7 @@ class ClassInstanceFieldsExtractor:
                     # print(matches)
 
         except ValueError as e:
-            print(f"Could not string manipulate file...")
+            print(f"Could not string manipulate file {self.file.name}...")
             print(e)
 
 
@@ -347,26 +351,67 @@ class EffectivityVerifier:
             print("could not open data/verif-mapping.yml, there will be no verification")
             self.mapping = None
 
+    def verify_relevant_files(self, active_reader: str, relevant_files: dict[str, list[JavaFile]]) -> bool:
+        if self.mapping is None:
+            print("Mapping is none, no data file found! Nothing to verify.")
+            return False
+        _map_ar_to_data_key: dict = {
+            "e-voting": "domain",
+            "crypto-primitives-domain": "crypto-primitives-domain",
+            "crypto-primitives": "crypto-primitives",
+            "verifier": "verifier-protocol"
+        }
+        _relevant_dict: dict | None = self.mapping[_map_ar_to_data_key[active_reader]]
+        _files = []
+        while _relevant_dict is not None:
+            _replacement_dict: dict | None = None
+            for item in _relevant_dict.values():
+                if type(item) is list:
+                    _files.extend(item)
+                elif type(item) is dict:
+                    if _replacement_dict is None:
+                        _replacement_dict = item
+                    else:
+                        _replacement_dict = _replacement_dict | item
+            _relevant_dict = _replacement_dict
+
+        _relevant_files = []
+        for _rfk in relevant_files.keys():
+            _relevant_files.extend([x.name.split(".")[0] for x in relevant_files[_rfk]])
+
+        for _expected in _files:
+            if _expected not in _relevant_files:
+                loguru.logger.warning(f"Did not find {_expected} in output, "
+                                      f"but expected to find it for this reader: {active_reader}")
+
+        for _found in _relevant_files:
+            if _found not in _files:
+                loguru.logger.warning(f"Found {_found} in output, "
+                                      f"but did not expect to find it for this reader: {active_reader}")
+        loguru.logger.info(f"Verif stats:")
+        loguru.logger.info(f"Found Files / Expected Files => {len(_relevant_files)} / {len(_files)}")
+
 
 class QRParseWrapper:
     def __init__(self, args_) -> None:
         self.args = args_
-        self.paths = []
+        self.paths: list[pathlib.Path] = []
 
     def get_paths_from_env(self) -> None:
         try:
-            self.paths.append(os.environ["VERIFIER_PATH"])
-            self.paths.append(os.environ["EVOTING_PATH"])
-            self.paths.append(os.environ["CPD_PATH"])
-            self.paths.append(os.environ["CP_PATH"])
+            self.paths.append(pathlib.Path(os.environ["VERIFIER_PATH"]))
+            self.paths.append(pathlib.Path(os.environ["EVOTING_PATH"]))
+            self.paths.append(pathlib.Path(os.environ["CPD_PATH"]))
+            self.paths.append(pathlib.Path(os.environ["CP_PATH"]))
         except KeyError as e:
             print("Environment variable for path to dir is missing.")
             raise e
 
     def exec(self):
         for path in self.paths:
-            _relevant = RelevantFiles(JavaFileLoader(path))
-            print(f"Hey! Found {_relevant.num_matches} matches.")
+            _verifier = EffectivityVerifier()
+            _relevant = RelevantFiles(JavaFileLoader(str(path)))
+            # print(f"Hey! Found {_relevant.num_matches} matches.")
             _CIFUR = ClassInstanceFieldUsageReport()
 
             for hash_gen in _relevant.MATCHES["Hash Generators"]:
@@ -375,6 +420,9 @@ class QRParseWrapper:
                 if self.args.verbose and _CIFUR.HGCIFU:
                     _CIFUR.HGCIFU.log()
 
+            _verifier.verify_relevant_files(path.name, _relevant.MATCHES)
+            print(f"Cooling down processing pool...")
+            time.sleep(1)
             # if self.args.out:
                 # _CIFUR.send_out(args.out)
 
