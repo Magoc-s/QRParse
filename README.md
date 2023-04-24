@@ -3,6 +3,12 @@
 QRParse is a python scripted designed to peform a **Q**uick **R**ough **Parse** on series of Java project directories,
 globbing all `.java` files and looking for matches against a hardcoded series of regular expressions.
 
+This script was created as a part of a larger project at the Australian National University (Thomas Haines et al. 2023).
+
+We used this script to statically analyse the projects open sourced for the SwissPost Evoting system, found here:
+
+https://gitlab.com/swisspost-evoting
+
 In this current build, we are matching all `.java` files that contain a `toHashableForm()` class instance method,
 and then we are cross-checking the fields entered into the method against what fields the class declares.
 
