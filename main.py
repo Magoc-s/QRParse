@@ -100,7 +100,7 @@ class RelevantFiles:
     """
     MATCHES: dict[str, list[JavaFile]] = None
 
-    def __init__(self, jf_iterable: Iterable[JavaFile]) -> None:
+    def __init__(self, jf_iterable: Iterable[JavaFile], path: pathlib.Path) -> None:
         """
         We multiprocess the file globbing and parsing as complex regex's can be inefficient to compute, especially over
         large numbers of files (such as the e-voting source dir)
@@ -108,6 +108,9 @@ class RelevantFiles:
         self.POOL = multiprocessing.Pool(processes=args.number_threads)
         self.MATCHES = {}
         self.num_matches: int = 0
+        self.num_files: int = 0
+
+        self.path = path
 
         manager = Manager()
         result_queue = manager.Queue()
@@ -117,6 +120,7 @@ class RelevantFiles:
         print("Spinning up globbing engine...")
         for jf in tqdm(jf_iterable, ncols=60, colour='blue', desc='Globbing and Matching...'):
             self.POOL.apply(func=mp_parse_file, args=(jf, result_queue,))
+            self.num_files += 1
 
         # Pull from the multiprocessing result queue to extract the computed dicts of each process invocation,
         # merge dict lists into main matches dict.
@@ -127,6 +131,10 @@ class RelevantFiles:
 
         for _tk in self.MATCHES.keys():
             self.num_matches += len(self.MATCHES[_tk])
+
+
+        loguru.logger.success(f"{self.path.name}: "
+                              f"Found {self.num_matches} matching files out of {self.num_files} total.")
 
 
 def mp_parse_file(jf: JavaFile, _rq: Any) -> None:
@@ -294,9 +302,10 @@ class ClassInstanceFieldUsageReport:
     REPORT: dict[str, dict]
     HGCIFU: HashGeneratorCheckInstanceFieldUsage | None
 
-    def __init__(self) -> None:
+    def __init__(self, dir_name: str) -> None:
         self.REPORT = {}
         self.HGCIFU = None
+        self.dir = dir_name
 
     def report(self, jf: JavaFile, relevance_type: str) -> None:
         if jf.name in self.REPORT.keys():
@@ -353,9 +362,9 @@ class ClassInstanceFieldUsageReport:
             _output = fp
 
         handle = open(_output, 'a' if append_mode else 'w') if _output == fp else _output
-        handle.write(f"# ----- BEGIN REPORT ------\n")
+        handle.write(f"# ----- BEGIN {self.dir} REPORT ------\n")
         yaml.safe_dump(self.REPORT, handle)
-        handle.write(f"# ----- END REPORT ------\n\n")
+        handle.write(f"# ----- END {self.dir} REPORT ------\n\n")
         if handle is not (sys.stdout or sys.stderr):
             handle.close()
 
@@ -438,9 +447,9 @@ class QRParseWrapper:
         for path in self.paths:
 
             _verifier = EffectivityVerifier()
-            _relevant = RelevantFiles(JavaFileLoader(str(path)))
+            _relevant = RelevantFiles(JavaFileLoader(str(path)), path)
             # print(f"Hey! Found {_relevant.num_matches} matches.")
-            _CIFUR = ClassInstanceFieldUsageReport()
+            _CIFUR = ClassInstanceFieldUsageReport(path.name)
 
             for hash_gen in _relevant.MATCHES["Hash Generators"]:
                 _CIFUR.report(hash_gen, "Hash Generators")
@@ -450,7 +459,7 @@ class QRParseWrapper:
 
             _verifier.verify_relevant_files(path.name, _relevant.MATCHES)
             print(f"Cooling down processing pool...")
-            time.sleep(1)
+            time.sleep(0.1)
             if self.args.out:
                 _CIFUR.send_out(args.out)
 

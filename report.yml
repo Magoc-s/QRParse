@@ -1,0 +1,1007 @@
+# ----- BEGIN QRPARSE TEST 2023-05-08 09:32:09.735359 ------
+# ----- BEGIN REPORT ------
+ContextIds.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableString.from(verificationCardId))
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+ControlComponentBallotBoxPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - electionEventId
+    - ballotBoxId
+    - nodeId
+    - confirmedEncryptedVotes
+    - signature
+    matched string: List.of(encryptionGroup,HashableString.from(electionEventId),HashableString.from(ballotBoxId),HashableBigInteger.from(BigInteger.valueOf(nodeId)),HashableList.from(confirmedEncryptedVotes))
+    special notes:
+    - multiple matches for pattern regex found in file, check specifics of definition
+      manually. (file:///home/jules/Documents/projects/investigating-errors-project/source/verifier/verifier-protocol/src/main/java/ch/post/it/evoting/verifier/protocol/domain/tally/ControlComponentBallotBoxPayload.java)
+    unused: []
+    used:
+    - encryptionGroup
+    - electionEventId
+    - ballotBoxId
+    - nodeId
+    - confirmedEncryptedVotes
+ControlComponentPublicKeysPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - electionEventId
+    - controlComponentPublicKeys
+    - signature
+    matched string: List.of(encryptionGroup,HashableString.from(electionEventId),controlComponentPublicKeys)
+    unused: []
+    used:
+    - encryptionGroup
+    - electionEventId
+    - controlComponentPublicKeys
+EncryptedVerifiableVote.java:
+  Hash Generators:
+    instance fields:
+    - contextIds
+    - encryptedVote
+    - exponentiatedEncryptedVote
+    - encryptedPartialChoiceReturnCodes
+    - exponentiationProof
+    - plaintextEqualityProof
+    matched string: List.of(contextIds,encryptedVote,exponentiatedEncryptedVote,encryptedPartialChoiceReturnCodes,exponentiationProof,plaintextEqualityProof)
+    unused: []
+    used:
+    - contextIds
+    - encryptedVote
+    - exponentiatedEncryptedVote
+    - encryptedPartialChoiceReturnCodes
+    - exponentiationProof
+    - plaintextEqualityProof
+SetupComponentTallyDataPayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - ballotBoxDefaultTitle
+    - encryptionGroup
+    - verificationCardIds
+    - verificationCardPublicKeys
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableString.from(ballotBoxDefaultTitle),encryptionGroup,HashableList.from(verificationCardIds.stream().map(HashableString::from).toList()),verificationCardPublicKeys)
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - ballotBoxDefaultTitle
+    - encryptionGroup
+    - verificationCardIds
+    - verificationCardPublicKeys
+TallyComponentVotesPayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - ballotId
+    - ballotBoxId
+    - encryptionGroup
+    - votes
+    - actualSelectedVotingOptions
+    - decodedWriteInVotes
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(ballotId),HashableString.from(ballotBoxId),encryptionGroup,HashableList.from(votes.stream().map(vote
+      -> HashableList.from(vote.stream().map(PrimeGqElement::getValue).map(HashableBigInteger::from).toList())).toList()),HashableList.from(actualSelectedVotingOptions.stream().map(votingOption
+      -> HashableList.from(votingOption.stream().map(HashableString::from).toList())).toList()),HashableList.from(decodedWriteInVotes.stream().map(decodedWriteInVote
+      -> HashableList.from(decodedWriteInVote.stream().map(HashableString::from).toList())).toList()))
+    special notes:
+    - multiple matches for pattern regex found in file, check specifics of definition
+      manually. (file:///home/jules/Documents/projects/investigating-errors-project/source/verifier/verifier-protocol/src/main/java/ch/post/it/evoting/verifier/protocol/domain/tally/TallyComponentVotesPayload.java)
+    unused: []
+    used:
+    - electionEventId
+    - ballotId
+    - ballotBoxId
+    - encryptionGroup
+    - votes
+    - actualSelectedVotingOptions
+    - decodedWriteInVotes
+# ----- END REPORT ------
+
+# ----- BEGIN REPORT ------
+ChoiceReturnCodeToEncodedVotingOptionEntry.java:
+  Hash Generators:
+    instance fields:
+    - choiceReturnCode
+    - encodedVotingOption
+    matched string: List.of(HashableString.from(choiceReturnCode),HashableBigInteger.from(encodedVotingOption.getValue()))
+    unused: []
+    used:
+    - choiceReturnCode
+    - encodedVotingOption
+ConfirmationKey.java:
+  Hash Generators:
+    instance fields:
+    - contextIds
+    - element
+    matched string: List.of(contextIds, element)
+    unused: []
+    used:
+    - contextIds
+    - element
+ContextIds.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableString.from(verificationCardId))
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+ControlComponentBallotBoxPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - electionEventId
+    - ballotBoxId
+    - nodeId
+    - confirmedEncryptedVotes
+    - signature
+    matched string: List.of(encryptionGroup,HashableString.from(electionEventId),HashableString.from(ballotBoxId),HashableBigInteger.from(BigInteger.valueOf(nodeId)),HashableList.from(confirmedEncryptedVotes))
+    special notes:
+    - multiple matches for pattern regex found in file, check specifics of definition
+      manually. (file:///home/jules/Documents/projects/investigating-errors-project/source/e-voting/domain/src/main/java/ch/post/it/evoting/domain/tally/ControlComponentBallotBoxPayload.java)
+    unused: []
+    used:
+    - encryptionGroup
+    - electionEventId
+    - ballotBoxId
+    - nodeId
+    - confirmedEncryptedVotes
+ControlComponentLCCSharePayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - longChoiceReturnCodesShare
+    - signature
+    matched string: List.of(encryptionGroup, longChoiceReturnCodesShare)
+    unused: []
+    used:
+    - encryptionGroup
+    - longChoiceReturnCodesShare
+ControlComponentPartialDecryptPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - partiallyDecryptedEncryptedPCC
+    - signature
+    matched string: List.of(encryptionGroup, partiallyDecryptedEncryptedPCC)
+    unused: []
+    used:
+    - encryptionGroup
+    - partiallyDecryptedEncryptedPCC
+ControlComponentPublicKeysPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - electionEventId
+    - controlComponentPublicKeys
+    - signature
+    matched string: List.of(encryptionGroup,HashableString.from(electionEventId),controlComponentPublicKeys)
+    unused: []
+    used:
+    - encryptionGroup
+    - electionEventId
+    - controlComponentPublicKeys
+ControlComponenthlVCCPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - nodeId
+    - hashLongVoteCastCodeShare
+    - confirmationKey
+    - signature
+    matched string: List.of(encryptionGroup,HashableBigInteger.from(BigInteger.valueOf(nodeId)),HashableString.from(hashLongVoteCastCodeShare),confirmationKey)
+    unused: []
+    used:
+    - encryptionGroup
+    - nodeId
+    - hashLongVoteCastCodeShare
+    - confirmationKey
+ControlComponentlVCCSharePayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+    - nodeId
+    - longVoteCastReturnCodesShare
+    - isVerified
+    - confirmationKey
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableString.from(verificationCardId),HashableBigInteger.from(BigInteger.valueOf(nodeId)),encryptionGroup,longVoteCastReturnCodesShare,confirmationKey,HashableString.from(Boolean.toString(isVerified)))
+    special notes:
+    - multiple matches for pattern regex found in file, check specifics of definition
+      manually. (file:///home/jules/Documents/projects/investigating-errors-project/source/e-voting/domain/src/main/java/ch/post/it/evoting/domain/voting/confirmvote/ControlComponentlVCCSharePayload.java)
+    unused: []
+    used:
+    - encryptionGroup
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+    - nodeId
+    - longVoteCastReturnCodesShare
+    - isVerified
+    - confirmationKey
+ElectoralBoardHashesPayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - electoralBoardHashes
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableList.from(electoralBoardHashes.stream().map(HashableString::from).toList()))
+    unused: []
+    used:
+    - electionEventId
+    - electoralBoardHashes
+EncryptedVerifiableVote.java:
+  Hash Generators:
+    instance fields:
+    - contextIds
+    - encryptedVote
+    - exponentiatedEncryptedVote
+    - encryptedPartialChoiceReturnCodes
+    - exponentiationProof
+    - plaintextEqualityProof
+    matched string: List.of(contextIds,encryptedVote,exponentiatedEncryptedVote,encryptedPartialChoiceReturnCodes,exponentiationProof,plaintextEqualityProof)
+    unused: []
+    used:
+    - contextIds
+    - encryptedVote
+    - exponentiatedEncryptedVote
+    - encryptedPartialChoiceReturnCodes
+    - exponentiationProof
+    - plaintextEqualityProof
+LongChoiceReturnCodesShare.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+    - nodeId
+    - longChoiceReturnCodeShare
+    - exponentiationProof
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableString.from(verificationCardId),HashableBigInteger.from(BigInteger.valueOf(nodeId)),longChoiceReturnCodeShare,exponentiationProof)
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+    - nodeId
+    - longChoiceReturnCodeShare
+    - exponentiationProof
+LongVoteCastReturnCodesShare.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+    - nodeId
+    - longVoteCastReturnCodeShare
+    - exponentiationProof
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableString.from(verificationCardId),HashableBigInteger.from(BigInteger.valueOf(nodeId)),longVoteCastReturnCodeShare,exponentiationProof)
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardId
+    - nodeId
+    - longVoteCastReturnCodeShare
+    - exponentiationProof
+PartiallyDecryptedEncryptedPCC.java:
+  Hash Generators:
+    instance fields:
+    - contextIds
+    - nodeId
+    - exponentiatedGammas
+    - exponentiationProofs
+    matched string: List.of(contextIds,HashableBigInteger.from(BigInteger.valueOf(nodeId)),exponentiatedGammas,exponentiationProofs)
+    unused: []
+    used:
+    - contextIds
+    - nodeId
+    - exponentiatedGammas
+    - exponentiationProofs
+SetupComponentCMTablePayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - returnCodesMappingTable
+    - signature
+    matched string: List.of(HashableString.from(entry.getKey()), HashableString.from(entry.getValue()))).toList();return
+      List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableList.from(hashableReturnCodesMappingTable))
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - returnCodesMappingTable
+SetupComponentLVCCAllowListPayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - longVoteCastReturnCodesAllowList
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableList.from(hashableLongVoteCastReturnCodesAllowList))
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - longVoteCastReturnCodesAllowList
+SetupComponentTallyDataPayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - ballotBoxDefaultTitle
+    - encryptionGroup
+    - verificationCardIds
+    - verificationCardPublicKeys
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableString.from(ballotBoxDefaultTitle),encryptionGroup,HashableList.from(verificationCardIds.stream().map(HashableString::from).toList()),verificationCardPublicKeys)
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - ballotBoxDefaultTitle
+    - encryptionGroup
+    - verificationCardIds
+    - verificationCardPublicKeys
+SetupComponentVerificationCardKeystoresPayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardKeystores
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableList.from(verificationCardKeystores))
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - verificationCardKeystores
+TallyComponentVotesPayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - ballotId
+    - ballotBoxId
+    - encryptionGroup
+    - votes
+    - actualSelectedVotingOptions
+    - decodedWriteInVotes
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(ballotId),HashableString.from(ballotBoxId),encryptionGroup,HashableList.from(votes.stream().map(vote
+      -> HashableList.from(vote.stream().map(PrimeGqElement::getValue).map(HashableBigInteger::from).toList())).toList()),HashableList.from(actualSelectedVotingOptions.stream().map(votingOption
+      -> HashableList.from(votingOption.stream().map(HashableString::from).toList())).toList()),HashableList.from(decodedWriteInVotes.stream().map(decodedWriteInVote
+      -> HashableList.from(decodedWriteInVote.stream().map(HashableString::from).toList())).toList()))
+    special notes:
+    - multiple matches for pattern regex found in file, check specifics of definition
+      manually. (file:///home/jules/Documents/projects/investigating-errors-project/source/e-voting/domain/src/main/java/ch/post/it/evoting/domain/tally/TallyComponentVotesPayload.java)
+    unused: []
+    used:
+    - electionEventId
+    - ballotId
+    - ballotBoxId
+    - encryptionGroup
+    - votes
+    - actualSelectedVotingOptions
+    - decodedWriteInVotes
+VerificationCardKeystore.java:
+  Hash Generators:
+    instance fields:
+    - verificationCardId
+    - verificationCardKeystore
+    matched string: List.of(HashableString.from(verificationCardId), HashableString.from(verificationCardKeystore))
+    unused: []
+    used:
+    - verificationCardId
+    - verificationCardKeystore
+VotingServerConfirmPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - confirmationKey
+    - signature
+    matched string: List.of(encryptionGroup, confirmationKey)
+    unused: []
+    used:
+    - encryptionGroup
+    - confirmationKey
+VotingServerEncryptedVotePayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - encryptedVerifiableVote
+    - signature
+    matched string: List.of(encryptionGroup, encryptedVerifiableVote)
+    unused: []
+    used:
+    - encryptionGroup
+    - encryptedVerifiableVote
+# ----- END REPORT ------
+
+# ----- BEGIN REPORT ------
+CombinedCorrectnessInformation.java:
+  Hash Generators:
+    instance fields:
+    - correctnessInformationList
+    - totalNumberOfSelections
+    - totalNumberOfVotingOptions
+    - totalListOfWriteInOptions
+    - totalNumberOfWriteInOptions
+    - correctnessIdToListOfSelectionsIndexesMap
+    - correctnessIdToListOfVotingOptionsIndexesMap
+    matched string: '!! unable to extract !!'
+    unused:
+    - correctnessInformationList
+    - totalNumberOfSelections
+    - totalNumberOfVotingOptions
+    - totalListOfWriteInOptions
+    - totalNumberOfWriteInOptions
+    - correctnessIdToListOfSelectionsIndexesMap
+    - correctnessIdToListOfVotingOptionsIndexesMap
+    used: []
+ControlComponentCodeShare.java:
+  Hash Generators:
+    instance fields:
+    - verificationCardId
+    - voterChoiceReturnCodeGenerationPublicKey
+    - voterVoteCastReturnCodeGenerationPublicKey
+    - squared
+    - exponentiatedEncryptedPartialChoiceReturnCodes
+    - hashed
+    - encryptedPartialChoiceReturnCodeExponentiationProof
+    - squared
+    - exponentiatedEncryptedConfirmationKey
+    - hashed
+    - encryptedConfirmationKeyExponentiationProof
+    matched string: List.of(HashableString.from(verificationCardId),voterChoiceReturnCodeGenerationPublicKey,voterVoteCastReturnCodeGenerationPublicKey,exponentiatedEncryptedPartialChoiceReturnCodes,encryptedPartialChoiceReturnCodeExponentiationProof,exponentiatedEncryptedConfirmationKey,encryptedConfirmationKeyExponentiationProof)
+    unused:
+    - squared
+    - hashed
+    - squared
+    - hashed
+    used:
+    - verificationCardId
+    - voterChoiceReturnCodeGenerationPublicKey
+    - voterVoteCastReturnCodeGenerationPublicKey
+    - exponentiatedEncryptedPartialChoiceReturnCodes
+    - encryptedPartialChoiceReturnCodeExponentiationProof
+    - exponentiatedEncryptedConfirmationKey
+    - encryptedConfirmationKeyExponentiationProof
+ControlComponentCodeSharesPayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - chunkId
+    - encryptionGroup
+    - controlComponentCodeShares
+    - nodeId
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableBigInteger.from(BigInteger.valueOf(chunkId)),encryptionGroup,HashableList.from(controlComponentCodeShares),HashableBigInteger.from(BigInteger.valueOf(nodeId)))
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - chunkId
+    - encryptionGroup
+    - controlComponentCodeShares
+    - nodeId
+ControlComponentPublicKeys.java:
+  Hash Generators:
+    instance fields:
+    - nodeId
+    - ccrjChoiceReturnCodesEncryptionPublicKey
+    - ccrjSchnorrProofs
+    - ccmjElectionPublicKey
+    - ccmjSchnorrProofs
+    matched string: List.of(HashableBigInteger.from(BigInteger.valueOf(nodeId)),ccrjChoiceReturnCodesEncryptionPublicKey,ccrjSchnorrProofs,ccmjElectionPublicKey,ccmjSchnorrProofs)
+    unused: []
+    used:
+    - nodeId
+    - ccrjChoiceReturnCodesEncryptionPublicKey
+    - ccrjSchnorrProofs
+    - ccmjElectionPublicKey
+    - ccmjSchnorrProofs
+ControlComponentShufflePayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - electionEventId
+    - ballotBoxId
+    - nodeId
+    - verifiableDecryptions
+    - verifiableShuffle
+    - signature
+    matched string: List.of(encryptionGroup,HashableString.from(electionEventId),HashableString.from(ballotBoxId),HashableBigInteger.from(BigInteger.valueOf(nodeId)),verifiableDecryptions,verifiableShuffle)
+    unused: []
+    used:
+    - encryptionGroup
+    - electionEventId
+    - ballotBoxId
+    - nodeId
+    - verifiableDecryptions
+    - verifiableShuffle
+CorrectnessInformation.java:
+  Hash Generators:
+    instance fields:
+    - correctnessId
+    - numberOfSelections
+    - numberOfVotingOptions
+    - listOfWriteInOptions
+    matched string: List.of(HashableString.from(correctnessId),HashableBigInteger.from(BigInteger.valueOf(numberOfSelections)),HashableBigInteger.from(BigInteger.valueOf(numberOfVotingOptions)),HashableList.from(listOfWriteInOptions.stream().map(HashableBigInteger::from).toList()))
+    unused: []
+    used:
+    - correctnessId
+    - numberOfSelections
+    - numberOfVotingOptions
+    - listOfWriteInOptions
+ElectionEventContext.java:
+  Hash Generators:
+    instance fields: []
+    matched string: List.of(HashableString.from(electionEventId),HashableList.from(verificationCardSetContexts),HashableString.from(startTime.toString()),HashableString.from(finishTime.toString()))
+    unused: []
+    used: []
+ElectionEventContextPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - electionEventContext
+    - signature
+    matched string: List.of(encryptionGroup, electionEventContext)
+    unused: []
+    used:
+    - encryptionGroup
+    - electionEventContext
+EncryptionParametersPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - seed
+    - smallPrimes
+    - signature
+    matched string: List.of(HashableList.from(encryptionGroup.toHashableForm()),HashableString.from(seed),HashableList.from(smallPrimes))
+    unused: []
+    used:
+    - encryptionGroup
+    - seed
+    - smallPrimes
+PrimesMappingTable.java:
+  Hash Generators:
+    instance fields:
+    - pTable
+    matched string: List.of(pTable)
+    unused: []
+    used:
+    - pTable
+PrimesMappingTableEntry.java:
+  Hash Generators:
+    instance fields:
+    - actualVotingOption
+    - encodedVotingOption
+    matched string: List.of(HashableString.from(actualVotingOption),HashableBigInteger.from(encodedVotingOption.getValue()))
+    unused: []
+    used:
+    - actualVotingOption
+    - encodedVotingOption
+SetupComponentPublicKeys.java:
+  Hash Generators:
+    instance fields: []
+    matched string: List.of(HashableList.from(combinedControlComponentPublicKeys),
+      electoralBoardPublicKey, electoralBoardSchnorrProofs,electionPublicKey, choiceReturnCodesEncryptionPublicKey)
+    unused: []
+    used: []
+SetupComponentPublicKeysPayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - electionEventId
+    - setupComponentPublicKeys
+    - signature
+    matched string: List.of(encryptionGroup, setupComponentPublicKeys)
+    unused:
+    - electionEventId
+    used:
+    - encryptionGroup
+    - setupComponentPublicKeys
+SetupComponentVerificationData.java:
+  Hash Generators:
+    instance fields:
+    - verificationCardId
+    - encryptedHashedSquaredConfirmationKey
+    - encryptedHashedSquaredPartialChoiceReturnCodes
+    - verificationCardPublicKey
+    matched string: List.of(HashableString.from(verificationCardId),encryptedHashedSquaredConfirmationKey,encryptedHashedSquaredPartialChoiceReturnCodes,verificationCardPublicKey)
+    unused: []
+    used:
+    - verificationCardId
+    - encryptedHashedSquaredConfirmationKey
+    - encryptedHashedSquaredPartialChoiceReturnCodes
+    - verificationCardPublicKey
+SetupComponentVerificationDataPayload.java:
+  Hash Generators:
+    instance fields:
+    - electionEventId
+    - verificationCardSetId
+    - partialChoiceReturnCodesAllowList
+    - chunkId
+    - encryptionGroup
+    - setupComponentVerificationData
+    - combinedCorrectnessInformation
+    - signature
+    matched string: List.of(HashableString.from(electionEventId),HashableString.from(verificationCardSetId),HashableList.from(hashableAllowList),HashableBigInteger.from(BigInteger.valueOf(chunkId)),encryptionGroup,HashableList.from(setupComponentVerificationData),combinedCorrectnessInformation)
+    unused: []
+    used:
+    - electionEventId
+    - verificationCardSetId
+    - chunkId
+    - encryptionGroup
+    - setupComponentVerificationData
+    - combinedCorrectnessInformation
+    - partialChoiceReturnCodesAllowList
+TallyComponentShufflePayload.java:
+  Hash Generators:
+    instance fields:
+    - encryptionGroup
+    - electionEventId
+    - ballotBoxId
+    - verifiableShuffle
+    - verifiablePlaintextDecryption
+    - signature
+    matched string: List.of(this.encryptionGroup,HashableString.from(this.electionEventId),HashableString.from(this.ballotBoxId),this.verifiableShuffle,this.verifiablePlaintextDecryption.getDecryptedVotes(),this.verifiablePlaintextDecryption.getDecryptionProofs())
+    unused: []
+    used:
+    - encryptionGroup
+    - electionEventId
+    - ballotBoxId
+    - verifiableShuffle
+    - verifiablePlaintextDecryption
+VerificationCardSetContext.java:
+  Hash Generators:
+    instance fields:
+    - verificationCardSetId
+    - ballotBoxId
+    - testBallotBox
+    - numberOfWriteInFields
+    - numberOfVotingCards
+    - gracePeriod
+    - primesMappingTable
+    matched string: List.of(HashableString.from(verificationCardSetId),HashableString.from(ballotBoxId),HashableString.from(String.valueOf(testBallotBox)),HashableBigInteger.from(BigInteger.valueOf(numberOfWriteInFields)),HashableBigInteger.from(BigInteger.valueOf(numberOfVotingCards)),HashableBigInteger.from(BigInteger.valueOf(gracePeriod)),primesMappingTable)
+    unused: []
+    used:
+    - verificationCardSetId
+    - ballotBoxId
+    - testBallotBox
+    - numberOfWriteInFields
+    - numberOfVotingCards
+    - gracePeriod
+    - primesMappingTable
+# ----- END REPORT ------
+
+# ----- BEGIN REPORT ------
+CommitmentKey.java:
+  Hash Generators:
+    instance fields: []
+    matched string: '!! unable to extract !!'
+    unused: []
+    used: []
+DecryptionProof.java:
+  Hash Generators:
+    instance fields:
+    - e
+    - z
+    matched string: List.of(e, z)
+    unused: []
+    used:
+    - e
+    - z
+ElGamalMultiRecipientCiphertext.java:
+  Hash Generators:
+    instance fields: []
+    matched string: '!! unable to extract !!'
+    unused: []
+    used: []
+ElGamalMultiRecipientKeyPair.java:
+  Hash Generators:
+    instance fields: []
+    matched string: List.of(publicKey, privateKey)
+    unused: []
+    used: []
+ElGamalMultiRecipientMessage.java:
+  Hash Generators:
+    instance fields:
+    - messageElements
+    matched string: '!! unable to extract !!'
+    unused:
+    - messageElements
+    used: []
+ElGamalMultiRecipientPrivateKey.java:
+  Hash Generators:
+    instance fields:
+    - privateKeyElements
+    matched string: '!! unable to extract !!'
+    unused:
+    - privateKeyElements
+    used: []
+ElGamalMultiRecipientPublicKey.java:
+  Hash Generators:
+    instance fields:
+    - publicKeyElements
+    matched string: '!! unable to extract !!'
+    unused:
+    - publicKeyElements
+    used: []
+ExponentiationProof.java:
+  Hash Generators:
+    instance fields:
+    - e
+    - z
+    matched string: List.of(e, z)
+    unused: []
+    used:
+    - e
+    - z
+GqGroup.java:
+  Hash Generators:
+    instance fields:
+    - p
+    - q
+    - generator
+    - identity
+    matched string: List.of(HashableBigInteger.from(p), HashableBigInteger.from(q),
+      generator)
+    unused:
+    - identity
+    used:
+    - p
+    - q
+    - generator
+GroupElement.java:
+  Hash Generators:
+    instance fields: []
+    matched string: '!! unable to extract !!'
+    unused: []
+    used: []
+GroupMatrix.java:
+  Hash Generators:
+    instance fields: []
+    matched string: '!! unable to extract !!'
+    unused: []
+    used: []
+GroupVector.java:
+  Hash Generators:
+    instance fields: []
+    matched string: List.of(elements))
+    unused: []
+    used: []
+HadamardArgument.java:
+  Hash Generators:
+    instance fields:
+    - c_b
+    - zeroArgument
+    - m
+    - n
+    - group
+    matched string: List.of(c_b, zeroArgument)
+    unused:
+    - group
+    used:
+    - c_b
+    - zeroArgument
+    - m
+    - n
+MultiExponentiationArgument.java:
+  Hash Generators:
+    instance fields:
+    - c_A_0
+    - c_B
+    - E
+    - a
+    - r
+    - b
+    - s
+    - tau
+    - m
+    - n
+    - l
+    - group
+    matched string: List.of(c_A_0, c_B, E, a, r, b, s, tau)
+    unused:
+    - m
+    - n
+    - l
+    - group
+    used:
+    - c_A_0
+    - c_B
+    - E
+    - a
+    - r
+    - b
+    - s
+    - tau
+PlaintextEqualityProof.java:
+  Hash Generators:
+    instance fields:
+    - e
+    - z
+    matched string: List.of(e, z)
+    unused: []
+    used:
+    - e
+    - z
+ProductArgument.java:
+  Hash Generators:
+    instance fields:
+    - singleValueProductArgument
+    - m
+    - n
+    - group
+    - c_b
+    - hadamardArgument
+    matched string: List.of(singleValueProductArgument)
+    special notes:
+    - multiple matches for pattern regex found in file, check specifics of definition
+      manually. (file:///home/jules/Documents/projects/investigating-errors-project/source/crypto-primitives/src/main/java/ch/post/it/evoting/cryptoprimitives/mixnet/ProductArgument.java)
+    unused:
+    - group
+    used:
+    - singleValueProductArgument
+    - m
+    - n
+    - c_b
+    - hadamardArgument
+SchnorrProof.java:
+  Hash Generators:
+    instance fields:
+    - e
+    - z
+    matched string: List.of(e, z)
+    unused: []
+    used:
+    - e
+    - z
+ShuffleArgument.java:
+  Hash Generators:
+    instance fields:
+    - c_A
+    - c_B
+    - productArgument
+    - multiExponentiationArgument
+    - m
+    - n
+    - l
+    - group
+    matched string: List.of(c_A, c_B, productArgument, multiExponentiationArgument)
+    unused:
+    - group
+    used:
+    - c_A
+    - c_B
+    - productArgument
+    - multiExponentiationArgument
+    - m
+    - n
+    - l
+SingleValueProductArgument.java:
+  Hash Generators:
+    instance fields:
+    - c_d
+    - c_delta
+    - c_Delta
+    - a_tilde
+    - b_tilde
+    - r_tilde
+    - s_tilde
+    - n
+    - group
+    matched string: List.of(c_d, c_delta, c_Delta, a_tilde, b_tilde, r_tilde, s_tilde)
+    special notes:
+    - multiple matches for pattern regex found in file, check specifics of definition
+      manually. (file:///home/jules/Documents/projects/investigating-errors-project/source/crypto-primitives/src/main/java/ch/post/it/evoting/cryptoprimitives/mixnet/SingleValueProductArgument.java)
+    unused: []
+    used:
+    - c_d
+    - c_delta
+    - c_Delta
+    - a_tilde
+    - b_tilde
+    - r_tilde
+    - s_tilde
+    - n
+    - group
+TestGroupElement.java:
+  Hash Generators:
+    instance fields:
+    - group
+    matched string: '!! unable to extract !!'
+    unused:
+    - group
+    used: []
+TestSizedElement.java:
+  Hash Generators:
+    instance fields:
+    - size
+    - group
+    matched string: '!! unable to extract !!'
+    unused:
+    - size
+    - group
+    used: []
+VerifiableDecryptions.java:
+  Hash Generators:
+    instance fields:
+    - ciphertexts
+    - decryptionProofs
+    - group
+    - N
+    - l
+    matched string: List.of(ciphertexts, decryptionProofs)
+    unused:
+    - group
+    - l
+    used:
+    - ciphertexts
+    - decryptionProofs
+    - N
+VerifiableShuffle.java:
+  Hash Generators:
+    instance fields:
+    - shuffledCiphertexts
+    - shuffleArgument
+    matched string: List.of(shuffledCiphertexts, shuffleArgument)
+    unused: []
+    used:
+    - shuffledCiphertexts
+    - shuffleArgument
+ZeroArgument.java:
+  Hash Generators:
+    instance fields:
+    - c_A_0
+    - c_B_m
+    - c_d
+    - a_prime
+    - b_prime
+    - r_prime
+    - s_prime
+    - t_prime
+    - m
+    - n
+    - group
+    matched string: List.of(c_A_0, c_B_m, c_d, a_prime, b_prime, r_prime, s_prime,
+      t_prime)
+    unused:
+    - n
+    - group
+    used:
+    - c_A_0
+    - c_B_m
+    - c_d
+    - a_prime
+    - b_prime
+    - r_prime
+    - s_prime
+    - t_prime
+    - m
+# ----- END REPORT ------
+
